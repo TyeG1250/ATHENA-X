@@ -1,0 +1,212 @@
+# JARVIS-X Agent Specifications
+
+technical_agent:
+  name: "TechnicalAnalyst"
+  role: "Technical Analysis"
+  weight: 0.35
+  confidence_threshold: 0.75
+
+  indicators:
+    - name: "RSI"
+      period: 14
+      overbought: 70
+      oversold: 30
+
+    - name: "MACD"
+      fast_period: 12
+      slow_period: 26
+      signal_period: 9
+
+    - name: "EMA"
+      periods: [20, 50, 200]
+
+    - name: "Bollinger Bands"
+      period: 20
+      std_dev: 2
+
+    - name: "ATR"
+      period: 14
+
+    - name: "ADX"
+      period: 14
+      trend_threshold: 25
+
+    - name: "Volume"
+      period: 20
+
+  patterns:
+    enabled: true
+    types:
+      - head_and_shoulders
+      - double_top
+      - double_bottom
+      - triangle
+      - flag
+      - pennant
+
+  timeframes:
+    primary: "M15"
+    confirmation: ["H1", "H4"]
+
+sentiment_agent:
+  name: "SentimentAnalyst"
+  role: "Sentiment Analysis"
+  weight: 0.20
+  confidence_threshold: 0.80
+
+  news_weight: 0.60
+  social_weight: 0.40
+
+  models:
+    finbert:
+      enabled: true
+      threshold: 0.70
+
+    vader:
+      enabled: true
+      weight: 0.30
+
+  conviction_threshold: 0.70
+
+  filters:
+    min_article_relevance: 0.5
+    max_article_age_hours: 24
+    min_social_engagement: 10
+
+fundamental_agent:
+  name: "FundamentalAnalyst"
+  role: "Fundamental Analysis"
+  weight: 0.30
+  confidence_threshold: 0.70
+
+  factors:
+    - interest_rates
+    - gdp_growth
+    - inflation
+    - employment
+    - central_bank_policy
+
+  economic_events:
+    high_impact_weight: 0.50
+    medium_impact_weight: 0.30
+    low_impact_weight: 0.20
+
+  lookback_days: 30
+
+regime_detection_agent:
+  name: "RegimeDetector"
+  role: "Market Regime Detection"
+  weight: 0.15
+  confidence_threshold: 0.70
+
+  regimes:
+    - name: "trending"
+      strategies: ["trend_following", "breakout"]
+      position_multiplier: 1.2
+
+    - name: "mean_reversion"
+      strategies: ["mean_reversion", "range_trading"]
+      position_multiplier: 1.0
+
+    - name: "high_volatility"
+      strategies: ["volatility_breakout"]
+      position_multiplier: 0.5
+
+    - name: "choppy"
+      strategies: []
+      position_multiplier: 0.0  # No trading
+
+  model:
+    type: "hmm"
+    n_components: 4
+    covariance_type: "full"
+    n_iter: 1000
+
+  features:
+    - returns
+    - volatility
+    - volume
+    - trend_strength
+
+risk_agent:
+  name: "RiskManager"
+  role: "Risk Management"
+  has_veto_power: true
+
+  position_sizing:
+    method: "kelly"  # kelly, fixed, volatility
+    kelly_fraction: 0.5
+    max_position_pct: 0.02
+    min_position_pct: 0.005
+
+  stop_loss:
+    method: "atr"  # atr, fixed, volatility
+    atr_multiplier: 2.0
+    max_stop_pct: 0.03
+
+  take_profit:
+    method: "risk_reward"
+    risk_reward_ratio: 2.0
+    use_trailing: true
+    trailing_atr_multiplier: 3.0
+
+  validation_stages:
+    - signal_quality
+    - risk_parameters
+    - conflict_detection
+    - market_conditions
+
+compliance_agent:
+  name: "ComplianceOfficer"
+  role: "Compliance & Regulation"
+  has_veto_power: true
+
+  checks:
+    - max_leverage
+    - position_concentration
+    - trading_hours
+    - blacklisted_instruments
+    - circuit_breakers
+
+  blacklist:
+    instruments: []
+    high_risk_periods: []
+
+execution_agent:
+  name: "ExecutionManager"
+  role: "Order Execution"
+
+  order_types:
+    - market
+    - limit
+    - stop
+    - stop_limit
+
+  default_order_type: "market"
+
+  slippage:
+    max_acceptable_pct: 0.001  # 0.1%
+    reject_if_exceeded: true
+
+  retry:
+    max_attempts: 3
+    backoff_seconds: 2
+
+contest_mechanism:
+  enabled: true
+  evaluation_window_days: 60
+  min_trades_required: 20
+  rebalance_frequency_days: 7
+
+  metrics:
+    - name: "sharpe_ratio"
+      weight: 0.40
+    - name: "win_rate"
+      weight: 0.30
+    - name: "profit_factor"
+      weight: 0.20
+    - name: "max_drawdown"
+      weight: 0.10
+      inverse: true  # Lower is better
+
+  min_allocation_pct: 0.05  # 5% minimum

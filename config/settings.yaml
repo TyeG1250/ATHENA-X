@@ -1,0 +1,189 @@
+# JARVIS-X Global Configuration
+system:
+  name: "JARVIS-X"
+  version: "1.0.0"
+  environment: "development"  # development, paper, live
+  loop_interval: 60  # seconds between main loop iterations
+
+hardware:
+  gpu_device: "cuda:0"
+  cpu_threads: 12
+  ram_limit_gb: 24
+  enable_gpu: true
+  max_vram_gb: 10
+
+trading:
+  initial_capital: 250.0
+  base_currency: "USD"
+  max_position_size: 0.02  # 2% per trade
+  max_total_exposure: 0.06  # 6% total
+  max_leverage: 2.0
+  commission: 0.0001  # 1 pip for forex
+  slippage: 0.0001
+
+  # Trading instruments
+  symbols:
+    - "EUR_USD"
+    - "GBP_USD"
+    - "USD_JPY"
+    - "XAU_USD"  # Gold
+    - "US30_USD"  # Dow Jones
+
+  # Trading hours (UTC)
+  trading_hours:
+    start: "00:00"
+    end: "23:59"
+
+  # Days to trade (0=Monday, 6=Sunday)
+  trading_days: [0, 1, 2, 3, 4]  # Monday to Friday
+
+risk:
+  daily_loss_limit: 0.05  # 5%
+  max_drawdown: 0.15  # 15%
+  max_drawdown_halt: 0.20  # 20% - complete halt
+  consecutive_loss_limit: 5
+  vix_threshold: 30
+  fractional_kelly: 0.5
+  min_sharpe_ratio: 1.0
+  max_var_95: 0.03  # 3% VaR at 95% confidence
+  max_sector_exposure: 0.10  # 10% per sector
+  correlation_threshold: 0.7
+
+agents:
+  technical:
+    weight: 0.35
+    confidence_threshold: 0.75
+    enabled: true
+  fundamental:
+    weight: 0.30
+    confidence_threshold: 0.70
+    enabled: true
+  sentiment:
+    weight: 0.20
+    confidence_threshold: 0.80
+    enabled: true
+  regime:
+    weight: 0.15
+    confidence_threshold: 0.70
+    enabled: true
+
+consensus:
+  agreement_threshold: 0.70  # 70% weighted agreement required
+  veto_enabled: true
+  min_confidence: 0.80
+
+data_sources:
+  tradingview:
+    enabled: true
+    update_frequency: 60  # seconds
+    timeout: 10
+
+  oanda:
+    enabled: true
+    environment: "practice"  # practice or live
+    timeout: 10
+    stream_timeout: 300
+
+  news:
+    enabled: true
+    update_frequency: 900  # 15 minutes
+    max_articles: 100
+    sources:
+      - reuters
+      - cnbc
+      - marketwatch
+      - investing
+
+  social:
+    enabled: true
+    update_frequency: 1800  # 30 minutes
+    reddit:
+      enabled: true
+      subreddits:
+        - wallstreetbets
+        - Forex
+        - investing
+        - stocks
+      max_posts: 100
+    twitter:
+      enabled: false  # Requires API access
+      max_tweets: 100
+
+  economic_calendar:
+    enabled: true
+    update_frequency: 86400  # Daily
+    avoid_high_impact: true
+    buffer_minutes: 30  # Avoid trading 30 min before/after
+
+database:
+  questdb:
+    host: "localhost"
+    http_port: 9000
+    pg_port: 8812
+    influx_port: 9009
+
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: "jarvis_redis_password"
+    default_ttl: 900  # 15 minutes
+
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: "jarvis_db"
+    user: "jarvis_user"
+    password: "jarvis_postgres_password"
+
+models:
+  llama:
+    model_name: "meta-llama/Llama-3.1-8B-Instruct"
+    quantization: "4bit"  # 4bit, 8bit, or none
+    max_tokens: 512
+    temperature: 0.7
+    device: "cuda"
+
+  finbert:
+    model_name: "ProsusAI/finbert"
+    device: "cuda"
+    batch_size: 32
+
+  regime_detection:
+    model_type: "hmm"  # hmm or mamba
+    n_regimes: 3
+    lookback_period: 60
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 8000
+
+  logging:
+    level: "INFO"
+    format: "json"
+    rotation: "1 day"
+    retention: "30 days"
+
+  alerts:
+    enabled: true
+    methods:
+      - console
+      # - email
+      # - telegram
+
+    conditions:
+      - type: "daily_loss"
+        threshold: 0.03  # 3%
+      - type: "drawdown"
+        threshold: 0.10  # 10%
+      - type: "consecutive_losses"
+        threshold: 3
+
+backtesting:
+  enabled: true
+  start_date: "2019-01-01"
+  end_date: "2024-12-31"
+  initial_capital: 10000
+  commission: 0.0001
+  slippage: 0.0001

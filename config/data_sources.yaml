@@ -1,0 +1,324 @@
+# JARVIS-X Data Source Configurations
+
+tradingview:
+  enabled: true
+
+  rest_api:
+    enabled: true
+    base_url: "https://scanner.tradingview.com"
+    timeout: 10
+    rate_limit_per_minute: 30
+
+  websocket:
+    enabled: false  # Enable for real-time streaming
+    url: "wss://data.tradingview.com/socket.io/websocket"
+    reconnect_attempts: 5
+    reconnect_delay: 5
+
+  intervals:
+    - "1"      # 1 minute
+    - "5"      # 5 minutes
+    - "15"     # 15 minutes
+    - "60"     # 1 hour
+    - "240"    # 4 hours
+    - "1D"     # 1 day
+
+  indicators:
+    - RSI
+    - MACD
+    - "EMA20"
+    - "EMA50"
+    - "EMA200"
+    - "Bollinger.Upper"
+    - "Bollinger.Lower"
+    - ATR
+    - ADX
+    - Volume
+    - "Stoch.K"
+    - "Stoch.D"
+
+  screeners:
+    forex: "FX_IDC"
+    crypto: "CRYPTO"
+    stocks: "america"
+
+oanda:
+  enabled: true
+
+  rest_api:
+    base_url_practice: "https://api-fxpractice.oanda.com"
+    base_url_live: "https://api-fxtrade.oanda.com"
+    timeout: 10
+    rate_limit_per_second: 120
+
+  streaming:
+    enabled: true
+    reconnect_attempts: 10
+    heartbeat_timeout: 10
+
+  instruments:
+    forex:
+      - "EUR_USD"
+      - "GBP_USD"
+      - "USD_JPY"
+      - "AUD_USD"
+      - "USD_CAD"
+      - "NZD_USD"
+      - "EUR_GBP"
+      - "EUR_JPY"
+
+    metals:
+      - "XAU_USD"  # Gold
+      - "XAG_USD"  # Silver
+
+    indices:
+      - "SPX500_USD"  # S&P 500
+      - "NAS100_USD"  # NASDAQ
+      - "US30_USD"    # Dow Jones
+      - "UK100_GBP"   # FTSE 100
+
+    commodities:
+      - "BCO_USD"     # Brent Crude Oil
+      - "NATGAS_USD"  # Natural Gas
+
+  granularities:
+    - "M1"   # 1 minute
+    - "M5"   # 5 minutes
+    - "M15"  # 15 minutes
+    - "H1"   # 1 hour
+    - "H4"   # 4 hours
+    - "D"    # Daily
+
+  historical_data:
+    max_candles_per_request: 5000
+    default_count: 500
+
+news_sources:
+  enabled: true
+  update_frequency: 900  # 15 minutes
+
+  reuters:
+    enabled: true
+    url: "https://www.reuters.com/markets/"
+    selectors:
+      article: "div.story-card"
+      title: "h3.story-card__headline"
+      link: "a.story-card__headline-link"
+    rate_limit_delay: 3  # seconds
+
+  cnbc:
+    enabled: true
+    rss_feeds:
+      - "https://www.cnbc.com/id/100003114/device/rss/rss.html"  # Top News
+      - "https://www.cnbc.com/id/20910258/device/rss/rss.html"   # Markets
+    max_articles: 50
+
+  marketwatch:
+    enabled: true
+    url: "https://www.marketwatch.com/latest-news"
+    selectors:
+      article: "div.article__content"
+      title: "h3.article__headline"
+    rate_limit_delay: 3
+
+  investing:
+    enabled: true
+    url: "https://www.investing.com/news/latest-news"
+    selectors:
+      article: "article.js-article-item"
+      title: "a.title"
+    rate_limit_delay: 3
+
+  forexlive:
+    enabled: true
+    url: "https://www.forexlive.com/"
+    rate_limit_delay: 3
+
+  cache_ttl: 3600  # 1 hour
+
+economic_calendar:
+  enabled: true
+
+  forexfactory:
+    enabled: true
+    url: "https://www.forexfactory.com/calendar"
+    update_frequency: 86400  # Daily
+
+    selectors:
+      row: "tr.calendar__row"
+      time: "td.calendar__time"
+      currency: "td.calendar__currency"
+      impact: "td.calendar__impact"
+      event: "td.calendar__event"
+      actual: "td.calendar__actual"
+      forecast: "td.calendar__forecast"
+      previous: "td.calendar__previous"
+
+    impact_levels:
+      high: 3
+      medium: 2
+      low: 1
+
+    filter_currencies:
+      - USD
+      - EUR
+      - GBP
+      - JPY
+      - AUD
+      - CAD
+      - NZD
+
+  trading_economics:
+    enabled: false  # Requires API key
+    api_key: ""
+    base_url: "https://api.tradingeconomics.com"
+
+social_media:
+  enabled: true
+
+  reddit:
+    enabled: true
+
+    subreddits:
+      - name: "wallstreetbets"
+        weight: 0.20
+        max_posts: 100
+
+      - name: "Forex"
+        weight: 0.40
+        max_posts: 100
+
+      - name: "investing"
+        weight: 0.20
+        max_posts: 100
+
+      - name: "stocks"
+        weight: 0.10
+        max_posts: 100
+
+      - name: "algotrading"
+        weight: 0.10
+        max_posts: 50
+
+    filters:
+      min_upvotes: 10
+      min_comments: 5
+      max_age_hours: 24
+
+    rate_limit_per_minute: 60
+    update_frequency: 1800  # 30 minutes
+
+  twitter:
+    enabled: false  # Requires API access (paid)
+
+    keywords:
+      - "$SPY"
+      - "$EURUSD"
+      - "forex"
+      - "gold trading"
+
+    filters:
+      min_likes: 100
+      verified_only: false
+      max_age_hours: 12
+
+    rate_limit_per_minute: 100
+    update_frequency: 1800
+
+sentiment_analysis:
+  models:
+    finbert:
+      model_name: "ProsusAI/finbert"
+      batch_size: 32
+      threshold: 0.70
+      cache_results: true
+      cache_ttl: 3600
+
+    vader:
+      enabled: true
+      weight: 0.30
+
+  aggregation:
+    news_weight: 0.60
+    social_weight: 0.40
+
+    time_decay:
+      enabled: true
+      half_life_hours: 12
+
+  conviction_threshold: 0.70
+
+alternative_data:
+  enabled: false
+
+  fear_greed_index:
+    enabled: false
+    url: "https://api.alternative.me/fng/"
+    update_frequency: 3600
+
+  commitment_of_traders:
+    enabled: false
+    source: "cftc"
+    update_frequency: 604800  # Weekly
+
+data_validation:
+  enabled: true
+
+  price_checks:
+    max_deviation_pct: 0.10  # 10% from recent range
+    outlier_std_threshold: 3.0
+
+  spread_checks:
+    max_spread_multiplier: 3.0  # 3x average spread
+
+  volume_checks:
+    min_volume_pct: 0.50  # 50% of average
+
+  timestamp_checks:
+    max_age_seconds: 300  # 5 minutes
+
+  actions:
+    invalid_data: "reject"  # reject, flag, ignore
+
+caching:
+  enabled: true
+  backend: "redis"
+
+  ttl_seconds:
+    price_data: 60
+    indicators: 300
+    news: 900
+    sentiment: 1800
+    economic_calendar: 86400
+
+  invalidation:
+    on_new_data: true
+    on_error: true
+
+rate_limiting:
+  enabled: true
+
+  per_source:
+    tradingview: 30  # per minute
+    oanda: 120      # per second
+    news_sites: 10   # per minute
+    reddit: 60       # per minute
+
+  retry:
+    max_attempts: 3
+    backoff_multiplier: 2
+    initial_delay: 1
+
+anti_scraping:
+  user_agents:
+    rotate: true
+    pool_size: 10
+
+  request_delays:
+    min_seconds: 2
+    max_seconds: 5
+    randomize: true
+
+  proxies:
+    enabled: false
+    rotation: false

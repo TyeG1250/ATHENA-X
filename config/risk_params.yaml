@@ -1,0 +1,236 @@
+# JARVIS-X Risk Management Parameters
+
+position_sizing:
+  method: "kelly_criterion"
+  kelly_fraction: 0.5  # Use half Kelly for safety
+
+  limits:
+    max_position_pct: 0.02  # 2% of account per trade
+    min_position_pct: 0.005  # 0.5% minimum
+    max_total_exposure: 0.06  # 6% total exposure
+    max_leverage: 2.0
+
+  adjustments:
+    regime_based:
+      enabled: true
+      high_volatility_multiplier: 0.5
+      low_volatility_multiplier: 1.2
+
+    drawdown_based:
+      enabled: true
+      thresholds:
+        - drawdown: 0.05
+          multiplier: 0.75
+        - drawdown: 0.10
+          multiplier: 0.5
+        - drawdown: 0.15
+          multiplier: 0.25
+
+stop_loss:
+  method: "atr"  # atr, fixed, volatility, technical
+
+  atr:
+    multiplier: 2.0
+    min_periods: 14
+
+  fixed:
+    default_pct: 0.02  # 2%
+
+  volatility:
+    multiplier: 1.5
+    lookback_periods: 20
+
+  technical:
+    use_support_resistance: true
+    buffer_pips: 5
+
+  max_stop_distance_pct: 0.03  # Never risk more than 3%
+
+take_profit:
+  method: "risk_reward"
+
+  risk_reward_ratio: 2.0  # 2:1 reward to risk
+
+  trailing_stop:
+    enabled: true
+    activation_pct: 0.01  # Start trailing after 1% profit
+    trail_distance_atr: 3.0
+
+  partial_exits:
+    enabled: true
+    levels:
+      - profit_pct: 0.01
+        exit_pct: 0.25  # Exit 25% at 1% profit
+      - profit_pct: 0.02
+        exit_pct: 0.50  # Exit 50% at 2% profit
+
+risk_metrics:
+  var:
+    confidence_level: 0.95
+    lookback_days: 252
+    method: "historical"  # historical, parametric, monte_carlo
+
+  cvar:
+    confidence_level: 0.95
+
+  sharpe_ratio:
+    min_acceptable: 1.0
+    risk_free_rate: 0.02
+
+  sortino_ratio:
+    min_acceptable: 1.5
+    risk_free_rate: 0.02
+
+  calmar_ratio:
+    min_acceptable: 2.0
+
+  max_drawdown:
+    warning_threshold: 0.10  # 10%
+    halt_threshold: 0.15  # 15%
+    complete_stop: 0.20  # 20%
+
+circuit_breakers:
+  daily_loss:
+    enabled: true
+    limit_pct: 0.05  # 5% daily loss
+    action: "halt_trading"  # halt_trading, reduce_size, alert_only
+
+  max_drawdown:
+    enabled: true
+    warning_level: 0.10
+    halt_level: 0.15
+    action: "halt_trading"
+
+  consecutive_losses:
+    enabled: true
+    limit: 5
+    action: "reduce_position_size"
+    reduction_multiplier: 0.5
+
+  volatility_spike:
+    enabled: true
+    vix_threshold: 30
+    action: "pause_new_positions"
+
+  correlation_breach:
+    enabled: true
+    max_portfolio_correlation: 0.70
+    action: "reject_trade"
+
+  reset_schedule:
+    daily_reset_utc: "00:00"
+    weekly_reset_day: "Sunday"
+
+concentration_limits:
+  single_position: 0.02  # 2%
+  sector: 0.10  # 10%
+  asset_class: 0.15  # 15%
+  currency: 0.20  # 20%
+
+  correlation_based:
+    enabled: true
+    max_correlated_exposure: 0.10  # 10% in highly correlated positions
+    correlation_threshold: 0.70
+
+exposure_limits:
+  total_gross_exposure: 0.06  # 6%
+  total_net_exposure: 0.06  # 6%
+  long_exposure: 0.06
+  short_exposure: 0.06
+
+leverage_limits:
+  max_account_leverage: 2.0
+  max_position_leverage: 2.0
+
+  by_instrument:
+    forex: 2.0
+    indices: 1.5
+    commodities: 1.5
+    crypto: 1.0
+
+time_based_rules:
+  avoid_trading:
+    # High-impact economic events
+    - event_type: "central_bank_decision"
+      buffer_minutes_before: 30
+      buffer_minutes_after: 30
+
+    - event_type: "nfp"  # Non-Farm Payrolls
+      buffer_minutes_before: 30
+      buffer_minutes_after: 60
+
+    - event_type: "cpi"  # Inflation data
+      buffer_minutes_before: 30
+      buffer_minutes_after: 30
+
+  reduced_position_sizing:
+    # Asian session (lower liquidity)
+    - start_utc: "00:00"
+      end_utc: "07:00"
+      multiplier: 0.7
+
+    # Friday afternoon (weekend risk)
+    - day: "Friday"
+      start_utc: "16:00"
+      end_utc: "23:59"
+      multiplier: 0.5
+
+correlation_risk:
+  calculation_method: "rolling"  # rolling, exponential
+  lookback_period: 60  # days
+
+  thresholds:
+    low: 0.30
+    medium: 0.50
+    high: 0.70
+
+  actions:
+    high_correlation:
+      - reject_new_position
+      - reduce_existing_size
+
+  portfolio_diversification:
+    min_instruments: 3
+    max_instruments: 10
+    target_correlation: 0.30
+
+stress_testing:
+  enabled: true
+
+  scenarios:
+    - name: "2020_covid_crash"
+      max_daily_move: -0.12  # -12%
+      duration_days: 30
+
+    - name: "2022_volatility"
+      max_daily_move: -0.08  # -8%
+      duration_days: 60
+
+    - name: "flash_crash"
+      max_instant_move: -0.05  # -5%
+      recovery_minutes: 15
+
+  frequency: "weekly"
+  fail_threshold: 0.20  # Fail if stress test shows >20% drawdown
+
+dynamic_risk_adjustment:
+  enabled: true
+
+  factors:
+    - name: "account_size"
+      scaling: "logarithmic"
+
+    - name: "recent_performance"
+      lookback_days: 30
+      increase_threshold_sharpe: 2.0
+      decrease_threshold_sharpe: 0.5
+
+    - name: "market_regime"
+      trending: 1.2
+      mean_reverting: 1.0
+      high_volatility: 0.5
+      choppy: 0.0
+
+    - name: "time_of_day"
+      peak_liquidity: 1.0  # London/NY overlap
+      off_peak: 0.7
