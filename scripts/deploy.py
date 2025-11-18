@@ -208,7 +208,7 @@ def main():
     pipeline = ATHENADataPipeline(config)
 
     logger.info("  - Orchestrator...")
-    orchestrator = ATHENAOrchestrator(config)
+    orchestrator = ATHENAOrchestrator(config, oanda_client=pipeline.oanda)
 
     logger.info("  - Order Manager...")
     order_manager = OrderManager(config, oanda_client=pipeline.oanda)
