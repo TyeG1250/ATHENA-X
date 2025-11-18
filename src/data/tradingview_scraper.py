@@ -12,7 +12,8 @@ import time
 
 class TradingViewClient:
     """
-    TradingView API client for ATHENA-X
+    TradingView client for ATHENA-X
+    Uses web scraping to bypass API rate limits, with API as fallback
     """
 
     # Interval mapping
@@ -41,18 +42,31 @@ class TradingViewClient:
     FOREX_EXCHANGE = 'FX_IDC'
     OANDA_EXCHANGE = 'OANDA'
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], use_web_scraping: bool = True):
         """
         Initialize TradingView client
 
         Args:
             config: Configuration dictionary
+            use_web_scraping: Use Selenium web scraping (bypasses rate limits)
         """
         self.config = config
         self.timeout = config.get('timeout', 10)
-        self.rate_limit_delay = 3  # Seconds between requests (conservative to avoid 429)
+        self.rate_limit_delay = 3  # Seconds between requests
+        self.use_web_scraping = use_web_scraping
+        self.web_scraper = None
 
-        logger.info("TradingView client initialized")
+        # Initialize web scraper if enabled
+        if self.use_web_scraping:
+            try:
+                from .tradingview_web_scraper import TradingViewWebScraper
+                self.web_scraper = TradingViewWebScraper(headless=True)
+                logger.info("TradingView client initialized with web scraping (bypasses rate limits)")
+            except Exception as e:
+                logger.warning(f"Failed to initialize web scraper, using API only: {str(e)}")
+                self.use_web_scraping = False
+        else:
+            logger.info("TradingView client initialized with API only")
 
     def _get_handler(
         self,
@@ -107,6 +121,28 @@ class TradingViewClient:
         Returns:
             Complete analysis including indicators and recommendation
         """
+        # Try web scraping first (bypasses rate limits)
+        if self.use_web_scraping and self.web_scraper:
+            try:
+                logger.debug(f"Attempting web scraping for {symbol}")
+                result = self.web_scraper.get_technical_analysis(
+                    symbol=symbol.replace('_', ''),
+                    interval=interval.replace('m', '').replace('h', ''),  # Convert 15m -> 15
+                    exchange=exchange
+                )
+
+                # Check if scraping succeeded
+                if not result.get('error', False):
+                    logger.debug(f"Web scraping successful for {symbol}")
+                    return self._convert_web_scraper_result(result)
+                else:
+                    logger.warning(f"Web scraping failed for {symbol}, falling back to API")
+
+            except Exception as e:
+                logger.warning(f"Web scraper error for {symbol}, falling back to API: {str(e)}")
+
+        # Fallback to API (with retry logic for rate limiting)
+        logger.debug(f"Using API for {symbol}")
         last_error = None
 
         for attempt in range(max_retries + 1):
@@ -213,6 +249,34 @@ class TradingViewClient:
         except Exception as e:
             logger.error(f"Failed to get TradingView analysis for {symbol}: {str(e)}")
             return self._empty_analysis(symbol, interval)
+
+    def _convert_web_scraper_result(self, scraper_result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convert web scraper result format to match API format
+
+        Args:
+            scraper_result: Result from web scraper
+
+        Returns:
+            Result in API-compatible format
+        """
+        # Web scraper format is already mostly compatible
+        # Just ensure all expected fields are present
+        return {
+            'symbol': scraper_result.get('symbol'),
+            'interval': scraper_result.get('interval'),
+            'timestamp': scraper_result.get('timestamp'),
+            'price': scraper_result.get('price', {}),
+            'indicators': scraper_result.get('moving_averages', {}),
+            'oscillators': scraper_result.get('oscillators', {}),
+            'summary': scraper_result.get('summary', {
+                'recommendation': 'NEUTRAL',
+                'buy': 0,
+                'sell': 0,
+                'neutral': 0
+            }),
+            'source': 'web_scraping'
+        }
 
     def get_multiple_intervals(
         self,
