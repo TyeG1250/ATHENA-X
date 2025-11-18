@@ -302,10 +302,10 @@ class ATHENADataPipeline:
 
         if self.tradingview:
             try:
-                # Get multiple timeframes
+                # Get single timeframe to avoid rate limiting (was ['15m', '1h', '4h'])
                 analyses = self.tradingview.get_multiple_intervals(
                     symbol,
-                    intervals=['15m', '1h', '4h']
+                    intervals=['15m']  # Using only 15m to reduce API calls by 3x
                 )
 
                 return analyses

@@ -6,9 +6,32 @@ Caching layer for fast data access
 import redis
 import json
 import pickle
+import os
+import pandas as pd
+import numpy as np
 from typing import Any, Optional, Dict, List
-from datetime import timedelta
+from datetime import timedelta, datetime
 from loguru import logger
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for pandas/numpy types"""
+    def default(self, obj):
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+        elif isinstance(obj, (datetime, pd.DatetimeIndex)):
+            return obj.isoformat()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, pd.Series):
+            return obj.to_dict()
+        elif isinstance(obj, pd.DataFrame):
+            return obj.to_dict('records')
+        return super().default(obj)
 
 
 class RedisCache:
@@ -24,10 +47,11 @@ class RedisCache:
             config: Redis configuration
         """
         self.config = config
-        self.host = config.get('host', 'localhost')
-        self.port = config.get('port', 6379)
+        # Read from environment variables first, then fall back to config
+        self.host = os.getenv('REDIS_HOST', config.get('host', 'localhost'))
+        self.port = int(os.getenv('REDIS_PORT', config.get('port', 6379)))
         self.db = config.get('db', 0)
-        self.password = config.get('password')
+        self.password = os.getenv('REDIS_PASSWORD', config.get('password'))
         self.default_ttl = config.get('default_ttl', 900)  # 15 minutes
 
         self.client = redis.Redis(
@@ -71,7 +95,7 @@ class RedisCache:
         try:
             # Serialize value
             if serialize == 'json':
-                serialized = json.dumps(value)
+                serialized = json.dumps(value, cls=CustomJSONEncoder)
             elif serialize == 'pickle':
                 serialized = pickle.dumps(value)
             else:

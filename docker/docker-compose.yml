@@ -84,13 +84,13 @@ services:
 
   # ATHENA-X Application
   athena-app:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: athena-x:latest
     container_name: athena-app
     volumes:
-      - ../:/app
-      - /app/venv  # Exclude venv from mount
+      - ../config:/app/config
+      - ../logs:/app/logs
+      - ../data:/app/data
+      - ../.env:/app/.env
     environment:
       - PYTHONUNBUFFERED=1
       - REDIS_HOST=redis

@@ -10,7 +10,7 @@ from oandapyV20.endpoints.instruments import InstrumentsCandles
 from oandapyV20.endpoints.accounts import AccountSummary, AccountInstruments
 from oandapyV20.endpoints.orders import OrderCreate, OrderList
 from oandapyV20.endpoints.trades import TradesList, TradeDetails, TradeClose
-from oandapyV20.endpoints.positions import PositionsList, PositionDetails
+from oandapyV20.endpoints.positions import OpenPositions, PositionDetails
 
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
@@ -345,7 +345,7 @@ class OANDAClient:
     def get_open_positions(self) -> List[Dict[str, Any]]:
         """Get all open positions"""
         try:
-            r = PositionsList(accountID=self.account_id)
+            r = OpenPositions(accountID=self.account_id)
             response = self.client.request(r)
 
             positions = []

@@ -10,12 +10,25 @@ ENV PYTHONUNBUFFERED=1 \
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including Chrome for Selenium
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     curl \
+    wget \
+    gnupg \
+    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list' \
+    && apt-get update \
+    && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
+
+# Install chromedriver
+RUN CHROMEDRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE` && \
+    wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip && \
+    unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/ && \
+    rm /tmp/chromedriver.zip && \
+    chmod +x /usr/local/bin/chromedriver
 
 # Copy requirements first (for better caching)
 COPY requirements.txt .
@@ -46,6 +59,28 @@ RUN pip install --no-cache-dir \
     pytest-cov>=4.1.0 \
     pytest-asyncio>=0.21.0 \
     pytest-mock>=3.12.0
+
+# Install web scraping dependencies
+RUN pip install --no-cache-dir \
+    feedparser>=6.0.10 \
+    fake-useragent>=1.4.0 \
+    selenium>=4.15.0 \
+    yfinance>=0.2.0
+
+# Install ML/AI dependencies (large packages)
+RUN pip install --no-cache-dir \
+    torch>=2.0.0 \
+    transformers>=4.35.0 \
+    sentence-transformers>=2.2.0 \
+    accelerate>=0.24.0 \
+    peft>=0.6.0 \
+    bitsandbytes>=0.41.0 \
+    datasets>=2.14.0
+
+# Install financial analysis dependencies
+RUN pip install --no-cache-dir \
+    statsmodels>=0.14.0 \
+    hmmlearn>=0.3.0
 
 # Install optional dependencies (may fail on some systems)
 RUN pip install --no-cache-dir \
