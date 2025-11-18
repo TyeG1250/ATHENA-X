@@ -47,12 +47,18 @@ RUN pip install --no-cache-dir \
     pytest-asyncio>=0.21.0 \
     pytest-mock>=3.12.0
 
+# Install web scraping dependencies
+RUN pip install --no-cache-dir \
+    feedparser>=6.0.10 \
+    fake-useragent>=1.4.0 \
+    selenium>=4.15.0 \
+    yfinance>=0.2.0
+
 # Install optional dependencies (may fail on some systems)
 RUN pip install --no-cache-dir \
     oandapyV20>=0.7.2 \
     tradingview-ta>=3.3.0 \
     praw>=7.7.1 \
-    feedparser>=6.0.10 \
     || echo "Warning: Some optional dependencies failed to install"
 
 # Copy application code
