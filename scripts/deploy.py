@@ -143,10 +143,12 @@ def main():
     """Main deployment function"""
     parser = argparse.ArgumentParser(description="Deploy ATHENA-X Trading System")
     parser.add_argument(
+        '--mode',
         '--environment',
+        dest='environment',
         choices=['paper', 'live'],
         default='paper',
-        help='Deployment environment'
+        help='Deployment environment (paper or live)'
     )
     parser.add_argument(
         '--dry-run',
@@ -157,6 +159,16 @@ def main():
         '--config',
         default='config/settings.yaml',
         help='Configuration file path'
+    )
+    parser.add_argument(
+        '--symbols',
+        type=str,
+        help='Comma-separated list of symbols to trade (overrides config)'
+    )
+    parser.add_argument(
+        '--capital',
+        type=float,
+        help='Trading capital amount (overrides config)'
     )
 
     args = parser.parse_args()
@@ -175,6 +187,15 @@ def main():
 
     # Update environment in config
     config['system']['environment'] = args.environment
+
+    # Override config with command-line arguments if provided
+    if args.symbols:
+        config['trading']['symbols'] = [s.strip() for s in args.symbols.split(',')]
+        logger.info(f"Overriding symbols from command line: {config['trading']['symbols']}")
+
+    if args.capital:
+        config['trading']['capital'] = args.capital
+        logger.info(f"Overriding capital from command line: ${args.capital}")
 
     # Initialize components
     logger.info("Initializing components...")
