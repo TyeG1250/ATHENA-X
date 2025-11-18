@@ -1,6 +1,6 @@
 # Llama 3.1 Integration Guide for ATHENA-X
 
-This guide shows you how to integrate your locally running Llama 3.1 model with ATHENA-X.
+This guide shows you how to integrate Llama 3.1 with ATHENA-X using **two different methods**.
 
 ---
 
@@ -17,11 +17,44 @@ Llama 3.1 can enhance ATHENA-X by:
 
 ---
 
-## Quick Setup
+## 🔀 Two Integration Methods
 
-### Option 1: Using Ollama (Recommended - Easiest)
+### Method 1: Ollama (Easiest) ⭐
+- ✅ No manual file downloads
+- ✅ Ollama handles everything
+- ✅ Easy API access
+- ❌ Less control over parameters
 
-#### Step 1: Install Ollama
+### Method 2: Hugging Face Direct (Advanced)
+- ✅ Full control over model
+- ✅ Integrated into Python
+- ✅ Can fine-tune and customize
+- ❌ Manual download required (~16GB)
+- ❌ More complex setup
+
+**Recommended:** Start with **Method 1 (Ollama)** unless you need fine-tuning.
+
+---
+
+## 📋 Which Method Should You Use?
+
+**Use Ollama (Method 1) if:**
+- You want the easiest setup
+- You're using Llama for inference only (not training)
+- You want to switch models frequently
+- You're okay with API calls
+
+**Use Hugging Face (Method 2) if:**
+- You want to fine-tune Llama for trading
+- You need full control over model parameters
+- You want to integrate deeply into Python code
+- You're comfortable with ~16GB download
+
+---
+
+## Method 1: Ollama Setup (Recommended) ⭐
+
+### Step 1: Install Ollama
 
 **If you already have Ollama Docker container:**
 ```powershell
@@ -370,6 +403,178 @@ docker exec -it ollama ollama pull llama3.1:8b
 
 ---
 
+## Method 2: Hugging Face Direct Integration 🤗
+
+If you want full control and plan to fine-tune Llama for trading.
+
+### Step 1: Get Hugging Face Access
+
+1. **Create HF account:** https://huggingface.co/join
+2. **Accept Llama license:** https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct
+3. **Get access token:** https://huggingface.co/settings/tokens (create "Read" token)
+4. **Login via CLI:**
+   ```bash
+   pip install huggingface_hub
+   huggingface-cli login
+   # Paste your token when prompted
+   ```
+
+### Step 2: Download Model Files
+
+**Option A: Using provided script (recommended):**
+
+```powershell
+# In ATHENA-X container
+.\docker-run.ps1 shell
+
+# Run download script
+python scripts/download_llama_hf.py
+```
+
+This will:
+- Download Llama 3.1 8B Instruct (~16GB)
+- Save to `data/models/meta-llama/Meta-Llama-3.1-8B-Instruct/`
+- Take 10-30 minutes depending on internet speed
+
+**Option B: Manual download:**
+
+```bash
+# Install dependencies
+pip install huggingface_hub transformers torch
+
+# Download model
+python -c "
+from huggingface_hub import snapshot_download
+
+model_path = snapshot_download(
+    repo_id='meta-llama/Meta-Llama-3.1-8B-Instruct',
+    cache_dir='data/models',
+    resume_download=True
+)
+print(f'Downloaded to: {model_path}')
+"
+```
+
+**Model files structure:**
+```
+data/models/
+└── meta-llama/
+    └── Meta-Llama-3.1-8B-Instruct/
+        ├── config.json
+        ├── pytorch_model.bin (or .safetensors files)
+        ├── tokenizer.json
+        ├── tokenizer_config.json
+        └── ... other files
+```
+
+### Step 3: Install Dependencies
+
+```bash
+# Required packages
+pip install transformers torch accelerate bitsandbytes
+
+# For GPU (CUDA 12/13)
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+```
+
+### Step 4: Test Hugging Face Integration
+
+```python
+# Test script
+python -c "
+from src.llm.llama_hf import LlamaAdvisorHF
+
+# Initialize (will load model from data/models/)
+advisor = LlamaAdvisorHF()
+
+# Test decision explanation
+decision = {
+    'action': 'BUY',
+    'symbol': 'EUR_USD',
+    'confidence': 0.75,
+    'votes': {
+        'technical': 'BUY',
+        'sentiment': 'BUY',
+        'risk': 'APPROVED'
+    },
+    'consensus': 0.85
+}
+
+explanation = advisor.explain_decision(decision)
+print('Explanation:', explanation)
+"
+```
+
+### Step 5: Use in ATHENA-X
+
+**Using Hugging Face instead of Ollama:**
+
+```python
+# In your orchestrator or agents
+from src.llm.llama_hf import LlamaAdvisorHF
+
+class ATHENAOrchestrator:
+    def __init__(self, config):
+        # ... existing code ...
+
+        # Use Hugging Face Llama (instead of Ollama)
+        try:
+            self.llama = LlamaAdvisorHF(
+                model_path="data/models/meta-llama/Meta-Llama-3.1-8B-Instruct"
+            )
+            logger.info("Llama HF advisor initialized")
+        except Exception as e:
+            self.llama = None
+            logger.warning(f"Llama not available: {e}")
+```
+
+### Pros & Cons of Hugging Face Method
+
+**Pros:**
+- ✅ Full model control (temperature, top_p, etc.)
+- ✅ Can fine-tune for trading-specific tasks
+- ✅ No external API dependencies
+- ✅ Faster inference (no network overhead)
+- ✅ Works offline
+
+**Cons:**
+- ❌ Large download (16GB for 8B model)
+- ❌ Requires more RAM (8-16GB)
+- ❌ More complex setup
+- ❌ GPU recommended for good performance
+
+### Memory Requirements
+
+| Model Size | Precision | RAM Required | GPU VRAM | Speed (tokens/sec) |
+|------------|-----------|--------------|----------|-------------------|
+| **8B** | FP16 | 16GB | 8GB | 20-50 |
+| **8B** | 4-bit | 4GB | 4GB | 15-40 |
+| **70B** | FP16 | 140GB | 80GB | 2-5 |
+| **70B** | 4-bit | 40GB | 40GB | 1-3 |
+
+**Recommendation:** Use **8B with 4-bit quantization** for best balance.
+
+### 4-bit Quantization (Saves Memory)
+
+Already enabled by default in `LlamaHuggingFace`:
+
+```python
+advisor = LlamaAdvisorHF()  # Automatically uses 4-bit if GPU available
+```
+
+To disable quantization (requires more VRAM):
+
+```python
+from src.llm.llama_hf import LlamaHuggingFace
+
+llama = LlamaHuggingFace(
+    model_path="data/models/meta-llama/Meta-Llama-3.1-8B-Instruct",
+    load_in_4bit=False  # Use full precision (16GB VRAM)
+)
+```
+
+---
+
 ## Configuration
 
 Add to `config/settings.yaml`:
@@ -377,10 +582,23 @@ Add to `config/settings.yaml`:
 ```yaml
 llm:
   enabled: true  # Set to false to disable
-  provider: "ollama"
-  model: "llama3.1:8b"
-  api_url: "http://host.docker.internal:11434"  # Docker host
-  timeout: 15  # seconds
+
+  # Choose provider: "ollama" or "huggingface"
+  provider: "ollama"  # or "huggingface"
+
+  # Ollama settings (if using Method 1)
+  ollama:
+    model: "llama3.1:8b"
+    api_url: "http://host.docker.internal:11434"  # Docker host
+    timeout: 15  # seconds
+
+  # Hugging Face settings (if using Method 2)
+  huggingface:
+    model_path: "data/models/meta-llama/Meta-Llama-3.1-8B-Instruct"
+    load_in_4bit: true  # Use 4-bit quantization to save memory
+    max_new_tokens: 512
+
+  # What to use Llama for
   use_for:
     explanations: true  # Explain trading decisions
     news_analysis: true  # Enhance news sentiment
