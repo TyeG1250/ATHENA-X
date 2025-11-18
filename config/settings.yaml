@@ -98,7 +98,7 @@ consensus:
 
 data_sources:
   tradingview:
-    enabled: true
+    enabled: false  # Disabled due to aggressive rate limiting
     update_frequency: 60  # seconds
     timeout: 10
 
