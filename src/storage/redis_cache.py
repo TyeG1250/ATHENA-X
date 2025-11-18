@@ -7,9 +7,31 @@ import redis
 import json
 import pickle
 import os
+import pandas as pd
+import numpy as np
 from typing import Any, Optional, Dict, List
-from datetime import timedelta
+from datetime import timedelta, datetime
 from loguru import logger
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for pandas/numpy types"""
+    def default(self, obj):
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+        elif isinstance(obj, (datetime, pd.DatetimeIndex)):
+            return obj.isoformat()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, pd.Series):
+            return obj.to_dict()
+        elif isinstance(obj, pd.DataFrame):
+            return obj.to_dict('records')
+        return super().default(obj)
 
 
 class RedisCache:
@@ -73,7 +95,7 @@ class RedisCache:
         try:
             # Serialize value
             if serialize == 'json':
-                serialized = json.dumps(value)
+                serialized = json.dumps(value, cls=CustomJSONEncoder)
             elif serialize == 'pickle':
                 serialized = pickle.dumps(value)
             else:

@@ -50,7 +50,7 @@ class TradingViewClient:
         """
         self.config = config
         self.timeout = config.get('timeout', 10)
-        self.rate_limit_delay = 2  # Seconds between requests
+        self.rate_limit_delay = 3  # Seconds between requests (conservative to avoid 429)
 
         logger.info("TradingView client initialized")
 
@@ -91,7 +91,8 @@ class TradingViewClient:
         symbol: str,
         interval: str = '15m',
         screener: str = 'forex',
-        exchange: str = 'FX_IDC'
+        exchange: str = 'FX_IDC',
+        max_retries: int = 3
     ) -> Dict[str, Any]:
         """
         Get complete technical analysis for a symbol
@@ -101,15 +102,45 @@ class TradingViewClient:
             interval: Time interval
             screener: Market screener
             exchange: Exchange name
+            max_retries: Maximum number of retries on rate limiting
 
         Returns:
             Complete analysis including indicators and recommendation
         """
-        try:
-            handler = self._get_handler(symbol, screener, exchange, interval)
-            analysis = handler.get_analysis()
+        last_error = None
 
-            # Extract data
+        for attempt in range(max_retries + 1):
+            try:
+                handler = self._get_handler(symbol, screener, exchange, interval)
+                analysis = handler.get_analysis()
+
+                # Success - break retry loop
+                break
+
+            except Exception as e:
+                last_error = e
+                error_msg = str(e)
+
+                # Check if it's a rate limiting error (429)
+                if 'HTTP status code: 429' in error_msg or '429' in error_msg:
+                    if attempt < max_retries:
+                        # Exponential backoff: 3s, 6s, 12s
+                        delay = 3 * (2 ** attempt)
+                        logger.warning(f"Rate limited for {symbol}, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(delay)
+                        continue
+
+                # Non-retryable error or max retries reached
+                logger.error(f"Failed to get TradingView analysis for {symbol}: {error_msg}")
+                return self._empty_analysis(symbol, interval)
+
+        # If we got here without breaking, all retries failed
+        if last_error:
+            logger.error(f"Failed to get TradingView analysis for {symbol} after {max_retries} retries: {str(last_error)}")
+            return self._empty_analysis(symbol, interval)
+
+        # Extract data from successful analysis
+        try:
             indicators = analysis.indicators
             summary = analysis.summary
 
