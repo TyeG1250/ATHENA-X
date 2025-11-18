@@ -47,12 +47,24 @@ RUN pip install --no-cache-dir \
     pytest-asyncio>=0.21.0 \
     pytest-mock>=3.12.0
 
+# Install ML/AI dependencies (large packages)
+RUN pip install --no-cache-dir \
+    torch>=2.0.0 \
+    transformers>=4.35.0 \
+    sentence-transformers>=2.2.0 \
+    accelerate>=0.24.0
+
 # Install web scraping dependencies
 RUN pip install --no-cache-dir \
     feedparser>=6.0.10 \
     fake-useragent>=1.4.0 \
     selenium>=4.15.0 \
     yfinance>=0.2.0
+
+# Install financial analysis libraries
+RUN pip install --no-cache-dir \
+    statsmodels>=0.14.0 \
+    hmmlearn>=0.3.0
 
 # Install optional dependencies (may fail on some systems)
 RUN pip install --no-cache-dir \
