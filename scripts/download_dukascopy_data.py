@@ -17,6 +17,10 @@ import yaml
 from loguru import logger
 import psycopg2
 from tqdm import tqdm
+import asyncio
+import aiohttp
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 
 class DukascopyDownloader:
@@ -55,7 +59,7 @@ class DukascopyDownloader:
         'XAG_USD': 'XAGUSD',
     }
 
-    def __init__(self, config_path: str = "config/settings.yaml"):
+    def __init__(self, config_path: str = "config/settings.yaml", max_concurrent: int = 50):
         with open(config_path) as f:
             self.config = yaml.safe_load(f)
 
@@ -64,8 +68,13 @@ class DukascopyDownloader:
         self.questdb_host = db_config.get('host', 'questdb')
         self.questdb_port = db_config.get('pg_port', 8812)
 
+        # Concurrency settings
+        self.max_concurrent = max_concurrent  # Download up to 50 hours simultaneously
+        self.session = None
+
         logger.info("Dukascopy Downloader initialized")
         logger.info(f"QuestDB: {self.questdb_host}:{self.questdb_port}")
+        logger.info(f"Max concurrent downloads: {max_concurrent}")
 
     def get_available_symbols(self) -> List[str]:
         """Get symbols that Dukascopy supports from config"""
@@ -160,6 +169,73 @@ class DukascopyDownloader:
             logger.error(f"Parse error for {instrument}: {e}")
             return None
 
+    async def download_hour_async(
+        self,
+        session: aiohttp.ClientSession,
+        instrument: str,
+        year: int,
+        month: int,
+        day: int,
+        hour: int
+    ) -> tuple:
+        """
+        Download one hour of tick data asynchronously
+        Returns tuple: (hour_info, DataFrame or None)
+        """
+        duka_instrument = self.INSTRUMENTS.get(instrument)
+        if not duka_instrument:
+            return ((year, month, day, hour), None)
+
+        url = (
+            f"{self.BASE_URL}/{duka_instrument}/"
+            f"{year:04d}/{month-1:02d}/{day:02d}/{hour:02d}h_ticks.bi5"
+        )
+
+        try:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                if response.status == 404:
+                    return ((year, month, day, hour), None)
+
+                response.raise_for_status()
+                content = await response.read()
+
+                # Decompress LZMA data
+                decompressed = lzma.decompress(content)
+
+                # Parse binary tick data
+                ticks = []
+                offset = 0
+
+                while offset < len(decompressed):
+                    tick_data = struct.unpack('>IIIff', decompressed[offset:offset+20])
+
+                    ms_offset = tick_data[0]
+                    ask = tick_data[1] / 100000.0
+                    bid = tick_data[2] / 100000.0
+                    ask_vol = tick_data[3]
+                    bid_vol = tick_data[4]
+
+                    hour_start = datetime(year, month, day, hour)
+                    timestamp = hour_start + timedelta(milliseconds=ms_offset)
+
+                    ticks.append({
+                        'timestamp': timestamp,
+                        'ask': ask,
+                        'bid': bid,
+                        'ask_volume': ask_vol,
+                        'bid_volume': bid_vol
+                    })
+
+                    offset += 20
+
+                if not ticks:
+                    return ((year, month, day, hour), None)
+
+                return ((year, month, day, hour), pd.DataFrame(ticks))
+
+        except Exception:
+            return ((year, month, day, hour), None)
+
     def ticks_to_candles(
         self,
         ticks: pd.DataFrame,
@@ -198,7 +274,7 @@ class DukascopyDownloader:
 
         return ohlc.reset_index()
 
-    def download_symbol(
+    async def download_symbol_async(
         self,
         symbol: str,
         start_date: datetime,
@@ -206,7 +282,7 @@ class DukascopyDownloader:
         timeframe: str = '15T'
     ) -> pd.DataFrame:
         """
-        Download historical data for a symbol
+        Download historical data for a symbol using concurrent downloads
 
         Args:
             symbol: OANDA symbol (e.g., 'EUR_USD')
@@ -219,29 +295,43 @@ class DukascopyDownloader:
         """
         logger.info(f"Downloading {symbol} from {start_date.date()} to {end_date.date()}")
 
-        all_ticks = []
-
-        # Iterate through dates and hours
+        # Generate all hours to download
+        hours_to_download = []
         current = start_date
-        total_hours = int((end_date - start_date).total_seconds() / 3600)
+        while current < end_date:
+            hours_to_download.append((current.year, current.month, current.day, current.hour))
+            current += timedelta(hours=1)
 
-        with tqdm(total=total_hours, desc=f"Downloading {symbol}") as pbar:
-            while current < end_date:
-                # Download hour
-                hour_ticks = self.download_hour(
-                    symbol,
-                    current.year,
-                    current.month,
-                    current.day,
-                    current.hour
-                )
+        total_hours = len(hours_to_download)
+        logger.info(f"Total hours to download: {total_hours:,}")
 
-                if hour_ticks is not None and not hour_ticks.empty:
-                    all_ticks.append(hour_ticks)
+        # Create aiohttp session with connection pooling
+        connector = aiohttp.TCPConnector(limit=self.max_concurrent, limit_per_host=self.max_concurrent)
+        timeout = aiohttp.ClientTimeout(total=60, connect=10)
 
-                # Next hour
-                current += timedelta(hours=1)
-                pbar.update(1)
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            # Create download tasks
+            tasks = []
+            for year, month, day, hour in hours_to_download:
+                task = self.download_hour_async(session, symbol, year, month, day, hour)
+                tasks.append(task)
+
+            # Download with progress bar
+            all_ticks = []
+            completed = 0
+
+            with tqdm(total=total_hours, desc=f"Downloading {symbol}") as pbar:
+                # Process in batches to avoid overwhelming memory
+                batch_size = self.max_concurrent * 10  # Process 500 hours at a time
+                for i in range(0, len(tasks), batch_size):
+                    batch = tasks[i:i + batch_size]
+                    results = await asyncio.gather(*batch)
+
+                    for hour_info, ticks_df in results:
+                        if ticks_df is not None and not ticks_df.empty:
+                            all_ticks.append(ticks_df)
+                        completed += 1
+                        pbar.update(1)
 
         if not all_ticks:
             logger.warning(f"No data downloaded for {symbol}")
@@ -259,6 +349,27 @@ class DukascopyDownloader:
         logger.success(f"Created {len(candles):,} {timeframe} candles for {symbol}")
 
         return candles
+
+    def download_symbol(
+        self,
+        symbol: str,
+        start_date: datetime,
+        end_date: datetime,
+        timeframe: str = '15T'
+    ) -> pd.DataFrame:
+        """
+        Synchronous wrapper for async download method
+
+        Args:
+            symbol: OANDA symbol (e.g., 'EUR_USD')
+            start_date: Start date
+            end_date: End date
+            timeframe: Candle timeframe (default 15 minutes)
+
+        Returns:
+            DataFrame with OHLC candles
+        """
+        return asyncio.run(self.download_symbol_async(symbol, start_date, end_date, timeframe))
 
     def save_to_questdb(
         self,
@@ -402,8 +513,9 @@ if __name__ == "__main__":
     print(f"  Start: {start_date.date()}")
     print(f"  End: {end_date.date()}")
     print(f"  Timeframe: 15 minutes")
+    print(f"  Concurrent downloads: {downloader.max_concurrent}")
     print()
-    print("This will take 30-60 minutes depending on your internet speed...")
+    print("⚡ Using concurrent downloads - This should take 5-15 minutes with fast internet!")
     print()
 
     # Ask for confirmation
