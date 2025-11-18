@@ -98,7 +98,7 @@ consensus:
 
 data_sources:
   tradingview:
-    enabled: false  # Disabled due to aggressive rate limiting
+    enabled: true  # Using single timeframe (15m) to reduce API calls
     update_frequency: 60  # seconds
     timeout: 10
 
