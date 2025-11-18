@@ -6,14 +6,14 @@ system:
   loop_interval: 60  # seconds between main loop iterations
 
 hardware:
-  gpu_device: "cuda:0"
+  gpu_device: "cuda:0"  # RTX 3080
   cpu_threads: 12
   ram_limit_gb: 24
   enable_gpu: true
-  max_vram_gb: 10
+  max_vram_gb: 10  # RTX 3080 has 10GB VRAM
 
 trading:
-  initial_capital: 250.0
+  initial_capital: 250.0  # Fallback only - real balance from OANDA API
   base_currency: "USD"
   max_position_size: 0.02  # 2% per trade
   max_total_exposure: 0.06  # 6% total
@@ -21,13 +21,37 @@ trading:
   commission: 0.0001  # 1 pip for forex
   slippage: 0.0001
 
-  # Trading instruments
+  # Trading instruments (forex, indices, commodities)
   symbols:
+    # Major Forex Pairs
     - "EUR_USD"
     - "GBP_USD"
     - "USD_JPY"
+    - "USD_CHF"
+    - "AUD_USD"
+    - "NZD_USD"
+    - "USD_CAD"
+
+    # Minor Forex Pairs
+    - "EUR_GBP"
+    - "EUR_JPY"
+    - "GBP_JPY"
+    - "AUD_JPY"
+
+    # Indices
+    - "US30_USD"   # Dow Jones
+    - "SPX500_USD" # S&P 500
+    - "NAS100_USD" # NASDAQ 100
+    - "UK100_GBP"  # FTSE 100
+    - "DE30_EUR"   # DAX 30
+    - "JP225_USD"  # Nikkei 225
+
+    # Commodities
     - "XAU_USD"  # Gold
-    - "US30_USD"  # Dow Jones
+    - "XAG_USD"  # Silver
+    - "BCO_USD"  # Brent Crude Oil
+    - "WTICO_USD" # WTI Crude Oil
+    - "NATGAS_USD" # Natural Gas
 
   # Trading hours (UTC)
   trading_hours:

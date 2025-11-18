@@ -3,7 +3,7 @@ ATHENA-X Orchestrator (CEO)
 Coordinates all agents and makes final trading decisions
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TYPE_CHECKING
 from datetime import datetime
 from loguru import logger
 import numpy as np
@@ -12,6 +12,9 @@ from ..agents.base_agent import BaseAgent, VetoAgent
 from ..agents.technical_agent import TechnicalAnalysisAgent
 from ..agents.sentiment_agent import SentimentAnalysisAgent
 from ..agents.risk_agent import RiskManagementAgent
+
+if TYPE_CHECKING:
+    from ..data.oanda_client import OANDAClient
 
 
 class ATHENAOrchestrator:
@@ -27,14 +30,20 @@ class ATHENAOrchestrator:
     - Track performance
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(
+        self,
+        config: Dict[str, Any],
+        oanda_client: Optional['OANDAClient'] = None
+    ):
         """
         Initialize orchestrator
 
         Args:
             config: System configuration
+            oanda_client: Optional OANDA client for live account data
         """
         self.config = config
+        self.oanda_client = oanda_client
 
         # Initialize agents
         self.agents = self._initialize_agents(config)
@@ -49,8 +58,82 @@ class ATHENAOrchestrator:
         self.approved_trades = 0
         self.vetoed_trades = 0
 
+        # Account info
+        self._cached_account_balance = None
+        self._last_balance_fetch = None
+
         logger.info(f"ATHENA Orchestrator initialized with {len(self.agents)} agents")
         logger.info(f"Consensus threshold: {self.consensus_threshold:.0%}, Veto enabled: {self.veto_enabled}")
+
+        if self.oanda_client:
+            logger.info("✓ OANDA client connected - will use live account balance")
+        else:
+            logger.warning("No OANDA client - will use config initial_capital for testing")
+
+    def get_account_balance(self) -> float:
+        """
+        Get current account balance from OANDA API or config
+
+        Returns:
+            Current account balance
+        """
+        from datetime import timedelta
+
+        # Use cache if recent (< 60 seconds old)
+        if self._cached_account_balance and self._last_balance_fetch:
+            if (datetime.now() - self._last_balance_fetch) < timedelta(seconds=60):
+                return self._cached_account_balance
+
+        # Try OANDA API first
+        if self.oanda_client:
+            try:
+                account_summary = self.oanda_client.get_account_summary()
+                balance = account_summary.get('balance', 0)
+
+                if balance > 0:
+                    self._cached_account_balance = balance
+                    self._last_balance_fetch = datetime.now()
+                    logger.debug(f"Fetched account balance from OANDA: ${balance:.2f}")
+                    return balance
+
+            except Exception as e:
+                logger.warning(f"Failed to get OANDA balance: {e}, using config fallback")
+
+        # Fallback to config
+        config_capital = self.config.get('trading', {}).get('initial_capital', 250.0)
+        logger.debug(f"Using config initial_capital: ${config_capital:.2f}")
+        return config_capital
+
+    def get_current_portfolio(self) -> Dict[str, Any]:
+        """
+        Get current portfolio state from OANDA API or construct default
+
+        Returns:
+            Portfolio dictionary with equity, positions, exposure
+        """
+        portfolio = {
+            'equity': self.get_account_balance(),
+            'total_exposure': 0.0,
+            'positions': []
+        }
+
+        # Get open positions from OANDA if available
+        if self.oanda_client:
+            try:
+                positions = self.oanda_client.get_open_positions()
+                portfolio['positions'] = positions
+
+                # Calculate total exposure
+                total_exposure = sum(
+                    abs(pos.get('long_units', 0)) + abs(pos.get('short_units', 0))
+                    for pos in positions
+                )
+                portfolio['total_exposure'] = total_exposure
+
+            except Exception as e:
+                logger.warning(f"Failed to get OANDA positions: {e}")
+
+        return portfolio
 
     def _initialize_agents(self, config: Dict[str, Any]) -> Dict[str, BaseAgent]:
         """Initialize all trading agents"""
@@ -96,8 +179,11 @@ class ATHENAOrchestrator:
         logger.info(f"Evaluating opportunity: {symbol}")
         logger.info(f"{'='*60}")
 
+        # Get current portfolio (from OANDA API if available)
         if current_portfolio is None:
-            current_portfolio = {'equity': 250.0, 'total_exposure': 0.0, 'positions': []}
+            current_portfolio = self.get_current_portfolio()
+
+        logger.info(f"Portfolio: ${current_portfolio['equity']:.2f}, Exposure: {current_portfolio['total_exposure']:.2%}, Positions: {len(current_portfolio.get('positions', []))}")
 
         # Stage 1: Parallel agent analysis
         logger.info("Stage 1: Agent Analysis")
@@ -320,7 +406,7 @@ class ATHENAOrchestrator:
         atr = indicators.get('atr', 0.015)
 
         # Calculate position size
-        account_balance = portfolio.get('equity', 250.0)
+        account_balance = portfolio.get('equity', self.get_account_balance())
         position = risk_agent.calculate_position_size(
             strategy_stats=strategy_stats,
             account_balance=account_balance,
