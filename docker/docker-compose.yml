@@ -82,6 +82,35 @@ services:
     networks:
       - athena-network
 
+  # ATHENA-X Application
+  athena-app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: athena-app
+    volumes:
+      - ../:/app
+      - /app/venv  # Exclude venv from mount
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=athena_redis_password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=athena_db
+      - POSTGRES_USER=athena_user
+      - POSTGRES_PASSWORD=athena_postgres_password
+      - QUESTDB_HOST=questdb
+      - QUESTDB_PORT=8812
+    depends_on:
+      - questdb
+      - redis
+      - postgres
+    networks:
+      - athena-network
+    command: tail -f /dev/null  # Keep container running
+
 networks:
   athena-network:
     driver: bridge
