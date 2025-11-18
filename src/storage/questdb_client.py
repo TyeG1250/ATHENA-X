@@ -5,6 +5,7 @@ Time-series database for market data
 
 import requests
 import psycopg2
+import os
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import pandas as pd
@@ -24,9 +25,10 @@ class QuestDBClient:
             config: Database configuration
         """
         self.config = config
-        self.host = config.get('host', 'localhost')
-        self.http_port = config.get('http_port', 9000)
-        self.pg_port = config.get('pg_port', 8812)
+        # Read from environment variables first, then fall back to config
+        self.host = os.getenv('QUESTDB_HOST', config.get('host', 'localhost'))
+        self.http_port = int(os.getenv('QUESTDB_HTTP_PORT', config.get('http_port', 9000)))
+        self.pg_port = int(os.getenv('QUESTDB_PG_PORT', config.get('pg_port', 8812)))
         self.influx_port = config.get('influx_port', 9009)
 
         self.http_url = f"http://{self.host}:{self.http_port}"

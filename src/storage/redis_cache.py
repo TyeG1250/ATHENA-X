@@ -6,6 +6,7 @@ Caching layer for fast data access
 import redis
 import json
 import pickle
+import os
 from typing import Any, Optional, Dict, List
 from datetime import timedelta
 from loguru import logger
@@ -24,10 +25,11 @@ class RedisCache:
             config: Redis configuration
         """
         self.config = config
-        self.host = config.get('host', 'localhost')
-        self.port = config.get('port', 6379)
+        # Read from environment variables first, then fall back to config
+        self.host = os.getenv('REDIS_HOST', config.get('host', 'localhost'))
+        self.port = int(os.getenv('REDIS_PORT', config.get('port', 6379)))
         self.db = config.get('db', 0)
-        self.password = config.get('password')
+        self.password = os.getenv('REDIS_PASSWORD', config.get('password'))
         self.default_ttl = config.get('default_ttl', 900)  # 15 minutes
 
         self.client = redis.Redis(
