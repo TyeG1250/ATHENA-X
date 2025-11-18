@@ -52,6 +52,7 @@ RUN pip install --no-cache-dir \
     oandapyV20>=0.7.2 \
     tradingview-ta>=3.3.0 \
     praw>=7.7.1 \
+    feedparser>=6.0.10 \
     || echo "Warning: Some optional dependencies failed to install"
 
 # Copy application code
