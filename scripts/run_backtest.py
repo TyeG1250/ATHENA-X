@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-JARVIS-X Backtesting Script
+ATHENA-X Backtesting Script
 Run historical backtests on trading strategies
 """
 
@@ -35,7 +35,7 @@ def setup_logging():
 
 def parse_arguments():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description="JARVIS-X Backtesting")
+    parser = argparse.ArgumentParser(description="ATHENA-X Backtesting")
 
     parser.add_argument(
         "--strategy",
@@ -85,7 +85,7 @@ def parse_arguments():
 def run_backtest(args, config):
     """Run the backtest"""
     logger.info("=" * 60)
-    logger.info("JARVIS-X Backtesting")
+    logger.info("ATHENA-X Backtesting")
     logger.info("=" * 60)
     logger.info(f"Strategy: {args.strategy}")
     logger.info(f"Period: {args.start_date} to {args.end_date}")

@@ -1,5 +1,5 @@
 """
-JARVIS-X Unified Data Pipeline
+ATHENA-X Unified Data Pipeline
 Coordinates all data sources and provides unified interface
 """
 
@@ -18,9 +18,9 @@ from ..storage.redis_cache import RedisCache
 from ..models.finbert import FinBERTSentiment
 
 
-class JARVISDataPipeline:
+class ATHENADataPipeline:
     """
-    Unified data pipeline for JARVIS-X
+    Unified data pipeline for ATHENA-X
     Coordinates: OANDA, TradingView, News, Social Media, Economic Calendar
     """
 
@@ -43,7 +43,7 @@ class JARVISDataPipeline:
         self._init_validator(config)
         self._init_storage(config)
 
-        logger.info("JARVIS Data Pipeline initialized (Phase 2)")
+        logger.info("ATHENA Data Pipeline initialized (Phase 2)")
 
     def _init_oanda(self, config: Dict[str, Any]):
         """Initialize OANDA client"""

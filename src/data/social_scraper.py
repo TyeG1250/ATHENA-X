@@ -1,5 +1,5 @@
 """
-JARVIS-X Social Media Scraper
+ATHENA-X Social Media Scraper
 Reddit and Twitter sentiment tracking
 """
 
@@ -51,7 +51,7 @@ class SocialSentimentScraper:
         try:
             client_id = os.getenv('REDDIT_CLIENT_ID', '')
             client_secret = os.getenv('REDDIT_CLIENT_SECRET', '')
-            user_agent = os.getenv('REDDIT_USER_AGENT', 'JARVIS-X/1.0')
+            user_agent = os.getenv('REDDIT_USER_AGENT', 'ATHENA-X/1.0')
 
             if client_id and client_secret:
                 self.reddit = praw.Reddit(

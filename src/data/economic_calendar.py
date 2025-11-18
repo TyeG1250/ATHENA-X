@@ -1,5 +1,5 @@
 """
-JARVIS-X Economic Calendar Scraper
+ATHENA-X Economic Calendar Scraper
 ForexFactory economic calendar for high-impact events
 """
 

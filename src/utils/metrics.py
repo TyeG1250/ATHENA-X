@@ -1,5 +1,5 @@
 """
-JARVIS-X Metrics Collection and Monitoring
+ATHENA-X Metrics Collection and Monitoring
 Prometheus metrics for system monitoring
 """
 
@@ -11,7 +11,7 @@ from functools import wraps
 
 class MetricsCollector:
     """
-    Centralized metrics collection for JARVIS-X
+    Centralized metrics collection for ATHENA-X
     """
 
     def __init__(self, port: int = 8000, enable_prometheus: bool = True):
@@ -27,20 +27,20 @@ class MetricsCollector:
 
         # Trading Metrics
         self.trades_total = Counter(
-            'jarvis_trades_total',
+            'athena_trades_total',
             'Total number of trades executed',
             ['symbol', 'direction', 'result']
         )
 
         self.trade_profit = Histogram(
-            'jarvis_trade_profit',
+            'athena_trade_profit',
             'Trade profit/loss distribution',
             ['symbol'],
             buckets=[-100, -50, -20, -10, -5, 0, 5, 10, 20, 50, 100, 200]
         )
 
         self.trade_duration = Histogram(
-            'jarvis_trade_duration_seconds',
+            'athena_trade_duration_seconds',
             'Time from entry to exit',
             ['symbol'],
             buckets=[60, 300, 900, 1800, 3600, 7200, 14400, 28800, 86400]
@@ -48,47 +48,47 @@ class MetricsCollector:
 
         # Performance Metrics
         self.win_rate = Gauge(
-            'jarvis_win_rate',
+            'athena_win_rate',
             'Current win rate percentage',
             ['period']
         )
 
         self.sharpe_ratio = Gauge(
-            'jarvis_sharpe_ratio',
+            'athena_sharpe_ratio',
             'Current Sharpe ratio',
             ['period']
         )
 
         self.drawdown = Gauge(
-            'jarvis_drawdown',
+            'athena_drawdown',
             'Current drawdown percentage'
         )
 
         self.account_balance = Gauge(
-            'jarvis_account_balance',
+            'athena_account_balance',
             'Current account balance'
         )
 
         self.total_profit = Gauge(
-            'jarvis_total_profit',
+            'athena_total_profit',
             'Total profit/loss'
         )
 
         # Agent Metrics
         self.agent_votes = Counter(
-            'jarvis_agent_votes_total',
+            'athena_agent_votes_total',
             'Agent voting activity',
             ['agent', 'vote']
         )
 
         self.agent_accuracy = Gauge(
-            'jarvis_agent_accuracy',
+            'athena_agent_accuracy',
             'Agent prediction accuracy',
             ['agent']
         )
 
         self.agent_confidence = Histogram(
-            'jarvis_agent_confidence',
+            'athena_agent_confidence',
             'Agent confidence distribution',
             ['agent'],
             buckets=[0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
@@ -96,64 +96,64 @@ class MetricsCollector:
 
         # Data Pipeline Metrics
         self.data_fetches = Counter(
-            'jarvis_data_fetches_total',
+            'athena_data_fetches_total',
             'Data fetch operations',
             ['source', 'status']
         )
 
         self.data_latency = Histogram(
-            'jarvis_data_latency_seconds',
+            'athena_data_latency_seconds',
             'Data fetch latency',
             ['source'],
             buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
         )
 
         self.cache_hits = Counter(
-            'jarvis_cache_hits_total',
+            'athena_cache_hits_total',
             'Cache hit/miss statistics',
             ['cache_type', 'result']
         )
 
         # Risk Metrics
         self.risk_violations = Counter(
-            'jarvis_risk_violations_total',
+            'athena_risk_violations_total',
             'Risk limit violations',
             ['violation_type']
         )
 
         self.position_size = Histogram(
-            'jarvis_position_size',
+            'athena_position_size',
             'Position size distribution',
             ['symbol'],
             buckets=[0.005, 0.01, 0.015, 0.02, 0.025, 0.03]
         )
 
         self.var_95 = Gauge(
-            'jarvis_var_95',
+            'athena_var_95',
             'Value at Risk (95% confidence)'
         )
 
         # System Metrics
         self.loop_duration = Histogram(
-            'jarvis_loop_duration_seconds',
+            'athena_loop_duration_seconds',
             'Main loop execution time',
             buckets=[1, 5, 10, 30, 60, 120]
         )
 
         self.errors_total = Counter(
-            'jarvis_errors_total',
+            'athena_errors_total',
             'Total errors',
             ['component', 'error_type']
         )
 
         self.active_positions = Gauge(
-            'jarvis_active_positions',
+            'athena_active_positions',
             'Number of active positions'
         )
 
         # Sentiment Metrics
         self.sentiment_score = Gauge(
-            'jarvis_sentiment_score',
+            'athena_sentiment_score',
             'Market sentiment score',
             ['symbol', 'source']
         )

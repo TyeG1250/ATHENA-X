@@ -1,5 +1,5 @@
 """
-JARVIS-X FinBERT Sentiment Analysis
+ATHENA-X FinBERT Sentiment Analysis
 Financial sentiment analysis using FinBERT
 """
 

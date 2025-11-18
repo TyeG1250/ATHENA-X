@@ -1,4 +1,4 @@
-# JARVIS-X Risk Management Parameters
+# ATHENA-X Risk Management Parameters
 
 position_sizing:
   method: "kelly_criterion"

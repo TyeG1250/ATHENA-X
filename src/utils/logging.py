@@ -1,5 +1,5 @@
 """
-JARVIS-X Logging Utilities
+ATHENA-X Logging Utilities
 Structured logging with Loguru
 """
 
@@ -9,9 +9,9 @@ from loguru import logger
 from typing import Optional
 
 
-class JARVISLogger:
+class ATHENALogger:
     """
-    Centralized logging configuration for JARVIS-X
+    Centralized logging configuration for ATHENA-X
     """
 
     def __init__(
@@ -74,7 +74,7 @@ class JARVISLogger:
 
         # File handler - General logs
         logger.add(
-            self.log_dir / "jarvis_{time:YYYY-MM-DD}.log",
+            self.log_dir / "athena_{time:YYYY-MM-DD}.log",
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
             level=self.log_level,
             rotation=self.rotation,
@@ -216,7 +216,7 @@ def setup_logging(
     log_level: str = "INFO",
     log_dir: str = "logs",
     format_type: str = "detailed"
-) -> JARVISLogger:
+) -> ATHENALogger:
     """
     Quick setup for logging
 
@@ -226,9 +226,9 @@ def setup_logging(
         format_type: Format style
 
     Returns:
-        JARVISLogger instance
+        ATHENALogger instance
     """
-    return JARVISLogger(
+    return ATHENALogger(
         log_level=log_level,
         log_dir=log_dir,
         format_type=format_type
@@ -238,24 +238,24 @@ def setup_logging(
 # Convenience functions
 def get_logger(name: Optional[str] = None):
     """Get logger instance"""
-    return JARVISLogger.get_logger(name)
+    return ATHENALogger.get_logger(name)
 
 
 def log_trade(action: str, symbol: str, direction: str, size: float, price: float, **kwargs):
     """Log trade"""
-    JARVISLogger.log_trade(action, symbol, direction, size, price, **kwargs)
+    ATHENALogger.log_trade(action, symbol, direction, size, price, **kwargs)
 
 
 def log_performance(metric: str, value: float, period: str = "daily", **kwargs):
     """Log performance metric"""
-    JARVISLogger.log_performance(metric, value, period, **kwargs)
+    ATHENALogger.log_performance(metric, value, period, **kwargs)
 
 
 def log_agent_decision(agent_name: str, symbol: str, vote: str, confidence: float, reasoning: str = ""):
     """Log agent decision"""
-    JARVISLogger.log_agent_decision(agent_name, symbol, vote, confidence, reasoning)
+    ATHENALogger.log_agent_decision(agent_name, symbol, vote, confidence, reasoning)
 
 
 def log_risk_event(event_type: str, severity: str, message: str, **kwargs):
     """Log risk event"""
-    JARVISLogger.log_risk_event(event_type, severity, message, **kwargs)
+    ATHENALogger.log_risk_event(event_type, severity, message, **kwargs)

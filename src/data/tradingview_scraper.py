@@ -1,5 +1,5 @@
 """
-JARVIS-X TradingView Scraper
+ATHENA-X TradingView Scraper
 Get price data and technical indicators from TradingView
 """
 
@@ -12,7 +12,7 @@ import time
 
 class TradingViewClient:
     """
-    TradingView API client for JARVIS-X
+    TradingView API client for ATHENA-X
     """
 
     # Interval mapping

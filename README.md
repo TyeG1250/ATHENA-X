@@ -1,4 +1,4 @@
-# JARVIS-X Trading System
+# ATHENA-X Trading System
 
 **Version:** 1.0.0
 **Environment:** Windows 11 + WSL2 (Ubuntu 24.04)
@@ -9,7 +9,7 @@
 
 ## 🚀 Overview
 
-JARVIS-X is an advanced multi-agent AI trading system that combines cutting-edge machine learning, real-time data acquisition, and sophisticated risk management to execute profitable trades across forex, commodities, and indices.
+ATHENA-X is an advanced multi-agent AI trading system that combines cutting-edge machine learning, real-time data acquisition, and sophisticated risk management to execute profitable trades across forex, commodities, and indices.
 
 ### Key Features
 
@@ -186,13 +186,13 @@ source venv/bin/activate
 
 ```bash
 python -c "
-from src.data.data_pipeline import JARVISDataPipeline
+from src.data.data_pipeline import ATHENADataPipeline
 import yaml
 
 with open('config/settings.yaml') as f:
     config = yaml.safe_load(f)
 
-pipeline = JARVISDataPipeline(config)
+pipeline = ATHENADataPipeline(config)
 
 # Health check
 health = pipeline.health_check()
@@ -222,7 +222,7 @@ python scripts/run_backtest.py --strategy multi_agent --start-date 2023-01-01 --
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    JARVIS-X TRADING SYSTEM                   │
+│                    ATHENA-X TRADING SYSTEM                   │
 └─────────────────────────────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -297,7 +297,7 @@ python scripts/run_backtest.py --strategy multi_agent --start-date 2023-01-01 --
 ### Import Data Pipeline
 
 ```python
-from src.data.data_pipeline import JARVISDataPipeline
+from src.data.data_pipeline import ATHENADataPipeline
 import yaml
 
 # Load configuration
@@ -305,7 +305,7 @@ with open('config/settings.yaml') as f:
     config = yaml.safe_load(f)
 
 # Initialize pipeline
-pipeline = JARVISDataPipeline(config)
+pipeline = ATHENADataPipeline(config)
 
 # Get market data
 data = pipeline.get_complete_market_data('EUR_USD')
@@ -364,14 +364,14 @@ print(f"Aligned: {alignment['aligned']}, Direction: {alignment['direction']}")
 ### Access Dashboards
 
 - **QuestDB Console:** http://localhost:9000
-- **Grafana Dashboards:** http://localhost:3000 (admin/jarvis_admin)
+- **Grafana Dashboards:** http://localhost:3000 (admin/athena_admin)
 - **Prometheus Metrics:** http://localhost:9090
 
 ### View Logs
 
 ```bash
 # Real-time logs
-tail -f logs/jarvis_$(date +%Y-%m-%d).log
+tail -f logs/athena_$(date +%Y-%m-%d).log
 
 # Error logs only
 tail -f logs/errors_$(date +%Y-%m-%d).log
@@ -442,7 +442,7 @@ python -c "import torch; print(torch.cuda.is_available())"
 
 ```bash
 # Check Redis is running
-docker exec jarvis-redis redis-cli ping
+docker exec athena-redis redis-cli ping
 
 # Should return: PONG
 

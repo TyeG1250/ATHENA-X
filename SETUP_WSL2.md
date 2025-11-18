@@ -1,8 +1,8 @@
-# WSL2 Setup Guide for JARVIS-X
+# WSL2 Setup Guide for ATHENA-X
 
 ## Why WSL2?
 
-WSL2 is recommended for JARVIS-X because:
+WSL2 is recommended for ATHENA-X because:
 - ✅ Better Docker performance
 - ✅ Native Linux environment for scripts
 - ✅ CUDA support for GPU acceleration
@@ -54,7 +54,7 @@ wsl
 ubuntu
 ```
 
-## JARVIS-X Setup in WSL2
+## ATHENA-X Setup in WSL2
 
 Once in WSL2, navigate to your project:
 
@@ -67,7 +67,7 @@ cd /mnt/g/Users/TMG/ATHENA-X
 
 ## Alternative: Run on Windows
 
-JARVIS-X can also run on Windows with:
+ATHENA-X can also run on Windows with:
 - Python 3.10+ installed
 - Docker Desktop for Windows
 - Git Bash or PowerShell

@@ -1,5 +1,5 @@
 """
-JARVIS-X PostgreSQL Client
+ATHENA-X PostgreSQL Client
 Metadata and configuration storage
 """
 
@@ -25,8 +25,8 @@ class PostgreSQLClient:
         self.config = config
         self.host = config.get('host', 'localhost')
         self.port = config.get('port', 5432)
-        self.database = config.get('database', 'jarvis_db')
-        self.user = config.get('user', 'jarvis_user')
+        self.database = config.get('database', 'athena_db')
+        self.user = config.get('user', 'athena_user')
         self.password = config.get('password')
 
         self.conn = None

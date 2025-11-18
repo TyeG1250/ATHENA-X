@@ -1,4 +1,4 @@
-JARVIS-X / ATHENA-X
+ATHENA-X / ATHENA-X
 Project Structure - Phase 1 Complete
 =====================================
 

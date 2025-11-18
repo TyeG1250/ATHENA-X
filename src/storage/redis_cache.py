@@ -1,5 +1,5 @@
 """
-JARVIS-X Redis Cache Client
+ATHENA-X Redis Cache Client
 Caching layer for fast data access
 """
 
@@ -13,7 +13,7 @@ from loguru import logger
 
 class RedisCache:
     """
-    Redis cache client for JARVIS-X
+    Redis cache client for ATHENA-X
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -222,7 +222,7 @@ class RedisCache:
         except Exception as e:
             logger.error(f"Failed to flush database: {str(e)}")
 
-    # Specialized caching methods for JARVIS-X
+    # Specialized caching methods for ATHENA-X
 
     def cache_price(self, symbol: str, price_data: Dict[str, Any], ttl: int = 60):
         """Cache latest price data"""

@@ -1,5 +1,5 @@
 """
-JARVIS-X Phase 2 Testing
+ATHENA-X Phase 2 Testing
 Test news, social, economic calendar, and sentiment analysis
 """
 
@@ -16,7 +16,7 @@ from src.data.social_scraper import SocialSentimentScraper
 from src.data.economic_calendar import EconomicCalendar
 from src.data.data_validator import DataValidator
 from src.models.finbert import FinBERTSentiment
-from src.data.data_pipeline import JARVISDataPipeline
+from src.data.data_pipeline import ATHENADataPipeline
 
 
 def load_config():
@@ -226,7 +226,7 @@ def test_integrated_pipeline(config):
     logger.info("=" * 60)
 
     try:
-        pipeline = JARVISDataPipeline(config)
+        pipeline = ATHENADataPipeline(config)
 
         # Test getting news with sentiment
         logger.info("Testing news with sentiment...")
@@ -265,7 +265,7 @@ def test_integrated_pipeline(config):
 def main():
     """Run all Phase 2 tests"""
     logger.info("╔" + "=" * 58 + "╗")
-    logger.info("║" + " " * 15 + "JARVIS-X PHASE 2 TESTS" + " " * 21 + "║")
+    logger.info("║" + " " * 15 + "ATHENA-X PHASE 2 TESTS" + " " * 21 + "║")
     logger.info("╚" + "=" * 58 + "╝")
 
     config = load_config()

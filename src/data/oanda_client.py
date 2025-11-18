@@ -1,5 +1,5 @@
 """
-JARVIS-X OANDA API Client
+ATHENA-X OANDA API Client
 Market data and order execution via OANDA
 """
 
@@ -21,7 +21,7 @@ import time
 
 class OANDAClient:
     """
-    OANDA API client for JARVIS-X
+    OANDA API client for ATHENA-X
     """
 
     def __init__(self, api_key: str, account_id: str, environment: str = "practice"):

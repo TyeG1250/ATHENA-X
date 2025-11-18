@@ -1,5 +1,5 @@
 """
-JARVIS-X News Scraper
+ATHENA-X News Scraper
 Multi-source news aggregation for market sentiment
 """
 

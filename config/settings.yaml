@@ -1,6 +1,6 @@
-# JARVIS-X Global Configuration
+# ATHENA-X Global Configuration
 system:
-  name: "JARVIS-X"
+  name: "ATHENA-X"
   version: "1.0.0"
   environment: "development"  # development, paper, live
   loop_interval: 60  # seconds between main loop iterations
@@ -126,15 +126,15 @@ database:
     host: "localhost"
     port: 6379
     db: 0
-    password: "jarvis_redis_password"
+    password: "athena_redis_password"
     default_ttl: 900  # 15 minutes
 
   postgres:
     host: "localhost"
     port: 5432
-    database: "jarvis_db"
-    user: "jarvis_user"
-    password: "jarvis_postgres_password"
+    database: "athena_db"
+    user: "athena_user"
+    password: "athena_postgres_password"
 
 models:
   llama:

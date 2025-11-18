@@ -1,4 +1,4 @@
-# JARVIS-X Trading System - Dependencies
+# ATHENA-X Trading System - Dependencies
 # Python 3.10+
 
 # Core

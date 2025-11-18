@@ -1,5 +1,5 @@
 """
-JARVIS-X Phase 1 Testing
+ATHENA-X Phase 1 Testing
 Test data pipeline and all components
 """
 
@@ -11,7 +11,7 @@ from loguru import logger
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.data.data_pipeline import JARVISDataPipeline
+from src.data.data_pipeline import ATHENADataPipeline
 from src.data.oanda_client import OANDAClient
 from src.data.tradingview_scraper import TradingViewClient
 from src.storage.questdb_client import QuestDBClient
@@ -240,7 +240,7 @@ def test_data_pipeline(config):
     logger.info("=" * 60)
 
     try:
-        pipeline = JARVISDataPipeline(config)
+        pipeline = ATHENADataPipeline(config)
 
         # Health check
         health = pipeline.health_check()
@@ -269,7 +269,7 @@ def test_data_pipeline(config):
 def main():
     """Run all tests"""
     logger.info("╔" + "=" * 58 + "╗")
-    logger.info("║" + " " * 15 + "JARVIS-X PHASE 1 TESTS" + " " * 21 + "║")
+    logger.info("║" + " " * 15 + "ATHENA-X PHASE 1 TESTS" + " " * 21 + "║")
     logger.info("╚" + "=" * 58 + "╝")
 
     # Load configuration

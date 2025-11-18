@@ -1,5 +1,5 @@
 """
-JARVIS-X Alert System
+ATHENA-X Alert System
 Notification system for critical events
 """
 

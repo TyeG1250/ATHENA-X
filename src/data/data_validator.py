@@ -1,5 +1,5 @@
 """
-JARVIS-X Data Validation Layer
+ATHENA-X Data Validation Layer
 Validates incoming data quality
 """
 

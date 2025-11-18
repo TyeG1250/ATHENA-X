@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-JARVIS-X Trading System
+ATHENA-X Trading System
 Main Entry Point
 """
 
@@ -14,7 +14,7 @@ from loguru import logger
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.data.data_pipeline import JARVISDataPipeline
+from src.data.data_pipeline import ATHENADataPipeline
 from src.storage.questdb_client import QuestDBClient
 from src.storage.redis_cache import RedisCache
 from src.storage.postgres_client import PostgreSQLClient
@@ -42,7 +42,7 @@ def main():
     )
 
     logger.info("=" * 70)
-    logger.info("JARVIS-X Trading System v{}".format(config['system']['version']))
+    logger.info("ATHENA-X Trading System v{}".format(config['system']['version']))
     logger.info("=" * 70)
     logger.info(f"Environment: {config['system']['environment']}")
     logger.info(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -57,7 +57,7 @@ def main():
     # Initialize data pipeline
     logger.info("Initializing data pipeline...")
     try:
-        pipeline = JARVISDataPipeline(config)
+        pipeline = ATHENADataPipeline(config)
     except Exception as e:
         logger.error(f"Failed to initialize data pipeline: {str(e)}")
         sys.exit(1)
@@ -132,7 +132,7 @@ def main():
     # Cleanup
     logger.info("Shutting down...")
     pipeline.close()
-    logger.info("JARVIS-X stopped")
+    logger.info("ATHENA-X stopped")
 
 
 if __name__ == "__main__":

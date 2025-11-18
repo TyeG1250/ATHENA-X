@@ -1,5 +1,5 @@
 """
-JARVIS-X QuestDB Client
+ATHENA-X QuestDB Client
 Time-series database for market data
 """
 
